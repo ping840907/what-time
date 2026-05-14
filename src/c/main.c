@@ -115,7 +115,7 @@ static const char * const PHRASES[] = {
   "I checked. It's %s.",
   "Not that it matters. %s.",
   "Was that necessary? %s.",
-  "Against my better judgement: %s.",
+  "If I must: %s.",
   "Regrettably, it's %s.",
   "I suppose it's %s.",
   "Barely worth mentioning: %s.",

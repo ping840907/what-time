@@ -1,5 +1,10 @@
 #include <pebble.h>
 
+// ── Settings keys (match appinfo.json appKeys) ────────────────────────────────
+
+#define KEY_SHOW_PHRASE  0
+#define KEY_REVEAL_DELAY 1
+
 // ── State ─────────────────────────────────────────────────────────────────────
 
 typedef enum { STANDBY, SLIDING, ATTENTION, TIMED } State;
@@ -29,6 +34,18 @@ static GRect s_time_top_frame; // where animated "Time" ends up (top of attentio
 
 static char s_tbuf[40];
 
+// ── Settings ──────────────────────────────────────────────────────────────────
+
+static bool s_show_phrase = true;
+static int  s_reveal_delay = 2;  // seconds
+
+static void load_settings(void) {
+  if (persist_exists(KEY_SHOW_PHRASE))
+    s_show_phrase = persist_read_bool(KEY_SHOW_PHRASE);
+  if (persist_exists(KEY_REVEAL_DELAY))
+    s_reveal_delay = persist_read_int(KEY_REVEAL_DELAY);
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 // Reluctant phrases — %s is replaced with the formatted time.
@@ -47,8 +64,12 @@ static const char * const PHRASES[] = {
 static void apply_time(struct tm *lt) {
   char ts[8];
   strftime(ts, sizeof(ts), clock_is_24h_style() ? "%H:%M" : "%I:%M", lt);
-  snprintf(s_tbuf, sizeof(s_tbuf),
-           PHRASES[rand() % (int)ARRAY_LENGTH(PHRASES)], ts);
+  if (s_show_phrase) {
+    snprintf(s_tbuf, sizeof(s_tbuf),
+             PHRASES[rand() % (int)ARRAY_LENGTH(PHRASES)], ts);
+  } else {
+    snprintf(s_tbuf, sizeof(s_tbuf), "%s", ts);
+  }
   text_layer_set_text(s_fine, s_tbuf);
 }
 
@@ -98,7 +119,7 @@ static void anim_stopped(Animation *anim, bool finished, void *ctx) {
       text_layer_set_text(s_time_q, "Time?");
       layer_set_hidden(text_layer_get_layer(s_matter), false);
       s_state        = ATTENTION;
-      s_reveal_timer = app_timer_register(1500, show_fine, NULL);
+      s_reveal_timer = app_timer_register((uint32_t)s_reveal_delay * 1000, show_fine, NULL);
     }
   }
 }
@@ -176,6 +197,26 @@ static void focus_handler(bool in_focus) {
 // Bluetooth connect / disconnect — system shows a status banner and vibrates.
 static void connection_handler(bool connected) {
   enter_attention();
+}
+
+// ── AppMessage (Clay settings) ────────────────────────────────────────────────
+
+static void inbox_handler(DictionaryIterator *iter, void *ctx) {
+  Tuple *t;
+
+  t = dict_find(iter, KEY_SHOW_PHRASE);
+  if (t) {
+    s_show_phrase = (bool)t->value->int32;
+    persist_write_bool(KEY_SHOW_PHRASE, s_show_phrase);
+  }
+
+  t = dict_find(iter, KEY_REVEAL_DELAY);
+  if (t) {
+    s_reveal_delay = (int)t->value->int32;
+    if (s_reveal_delay < 1)  s_reveal_delay = 1;
+    if (s_reveal_delay > 10) s_reveal_delay = 10;
+    persist_write_int(KEY_REVEAL_DELAY, s_reveal_delay);
+  }
 }
 
 // ── Text layer factory ────────────────────────────────────────────────────────
@@ -272,6 +313,9 @@ static void window_unload(Window *win) {
 
 static void init(void) {
   srand((unsigned)time(NULL));
+  load_settings();
+  app_message_register_inbox_received(inbox_handler);
+  app_message_open(64, 8);
   s_win = window_create();
   window_set_window_handlers(s_win, (WindowHandlers){
     .load   = window_load,

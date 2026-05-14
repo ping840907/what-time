@@ -1,0 +1,8 @@
+{
+  "name": "what-time",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "dependencies": {
+    "pebble-clay": "rebble/clay"
+  }
+}

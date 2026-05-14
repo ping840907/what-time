@@ -5,11 +5,14 @@
   "companyName": "Custom",
   "versionLabel": "1.0",
   "sdkVersion": "3",
-  "targetPlatforms": ["aplite", "basalt", "chalk", "diorite", "emery", "gabbro"],
+  "targetPlatforms": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
   "watchapp": {
     "watchface": true
   },
-  "appKeys": {},
+  "appKeys": {
+    "show_phrase": 0,
+    "reveal_delay": 1
+  },
   "resources": {
     "media": []
   }

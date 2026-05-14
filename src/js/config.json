@@ -1,0 +1,23 @@
+[
+  {
+    "type": "heading",
+    "defaultValue": "What Time? Settings"
+  },
+  {
+    "type": "toggle",
+    "messageKey": "show_phrase",
+    "label": "Show Reluctant Phrase",
+    "description": "Display a random reluctant phrase alongside the time",
+    "defaultValue": true
+  },
+  {
+    "type": "slider",
+    "messageKey": "reveal_delay",
+    "label": "Reveal Delay (seconds)",
+    "description": "How long to wait before showing the time after the animation",
+    "defaultValue": 2,
+    "min": 1,
+    "max": 10,
+    "step": 1
+  }
+]

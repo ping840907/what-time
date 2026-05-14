@@ -2,8 +2,9 @@
 
 // ── Settings keys (match appinfo.json appKeys) ────────────────────────────────
 
-#define KEY_SHOW_PHRASE  0
-#define KEY_REVEAL_DELAY 1
+#define KEY_SHOW_PHRASE   0
+#define KEY_REVEAL_DELAY  1
+#define KEY_USE_TYPEWRITER 2
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -39,12 +40,15 @@ static AppTimer *s_type_timer;
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 
-static bool s_show_phrase = true;
-static int  s_reveal_delay = 2;  // seconds
+static bool s_show_phrase    = true;
+static bool s_use_typewriter = true;
+static int  s_reveal_delay   = 2;  // seconds
 
 static void load_settings(void) {
   if (persist_exists(KEY_SHOW_PHRASE))
     s_show_phrase = persist_read_bool(KEY_SHOW_PHRASE);
+  if (persist_exists(KEY_USE_TYPEWRITER))
+    s_use_typewriter = persist_read_bool(KEY_USE_TYPEWRITER);
   if (persist_exists(KEY_REVEAL_DELAY))
     s_reveal_delay = persist_read_int(KEY_REVEAL_DELAY);
 }
@@ -140,7 +144,11 @@ static void show_fine(void *unused) {
   s_state        = TIMED;
   // Capture time at the exact moment of display, not at the earlier trigger.
   refresh_fine_text();
-  start_typewriter();
+  if (s_use_typewriter) {
+    start_typewriter();
+  } else {
+    layer_set_hidden(text_layer_get_layer(s_fine), false);
+  }
   // Return to standby after another 8.5 s (total ~10 s since attention).
   s_sleep_timer = app_timer_register(8500, go_standby, NULL);
 }
@@ -252,6 +260,12 @@ static void inbox_handler(DictionaryIterator *iter, void *ctx) {
     persist_write_bool(KEY_SHOW_PHRASE, s_show_phrase);
   }
 
+  t = dict_find(iter, KEY_USE_TYPEWRITER);
+  if (t) {
+    s_use_typewriter = (bool)t->value->int32;
+    persist_write_bool(KEY_USE_TYPEWRITER, s_use_typewriter);
+  }
+
   t = dict_find(iter, KEY_REVEAL_DELAY);
   if (t) {
     s_reveal_delay = (int)t->value->int32;
@@ -283,13 +297,16 @@ static void window_load(Window *win) {
   GRect  b     = layer_get_bounds(root);
   window_set_background_color(win, GColorBlack);
 
-  GFont bold  = fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
-  GFont small = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+  bool small_screen = b.size.w < 200;
+  GFont bold  = fonts_get_system_font(small_screen ? FONT_KEY_BITHAM_30_BLACK
+                                                   : FONT_KEY_BITHAM_42_BOLD);
+  GFont small = fonts_get_system_font(small_screen ? FONT_KEY_GOTHIC_14
+                                                   : FONT_KEY_GOTHIC_18);
 
   // ── Standby layout ─────────────────────────────────────────────────────────
   // Two separate layers placed close together around vertical centre.
-  // line_h = 48 gives each BITHAM_42_BOLD line a snug, no-gap fit.
-  const int line_h = 48;
+  // line_h: 36px for 30pt font (w<200), 48px for 42pt font (w>=200).
+  const int line_h = small_screen ? 36 : 48;
   const int cy     = b.size.h / 2;
 
   s_what       = make_layer(root, GRect(0, cy - line_h, b.size.w, line_h),
@@ -310,14 +327,14 @@ static void window_load(Window *win) {
   layer_set_hidden(text_layer_get_layer(s_matter), true);
 
   // ── Fine label ──────────────────────────────────────────────────────────────
-  // FONT_KEY_GOTHIC_18, right-aligned, pinned to the bottom-right corner.
+  // Small font, right-aligned, pinned to the bottom-right corner.
   // On round displays (chalk / gabbro) we shift inward a little.
 #if defined(PBL_ROUND)
   const int fine_margin = b.size.w / 8;
 #else
   const int fine_margin = 6;
 #endif
-  const int fine_h = 22;
+  const int fine_h = small_screen ? 18 : 22;
   s_fine = make_layer(root,
                       GRect(fine_margin,
                             b.size.h - fine_h - fine_margin,

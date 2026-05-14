@@ -141,16 +141,13 @@ static void enter_attention(void) {
   animation_schedule(anim);
 }
 
-// ── Input handlers ────────────────────────────────────────────────────────────
+// ── Input + system event handlers ────────────────────────────────────────────
 
 static void btn_down(ClickRecognizerRef r, void *ctx) {
   enter_attention();
 }
 
-// raw_click fires on button-down, bypassing the single-click recogniser's
-// down→up wait.  This is more reliable in watchface contexts where the
-// click config provider may not be invoked with the same timing as in apps.
-// On emery / gabbro, touch taps are also routed through this provider.
+// raw_click fires on button-down; also receives touch taps on emery / gabbro.
 static void click_cfg(void *ctx) {
   window_raw_click_subscribe(BUTTON_ID_UP,     btn_down, NULL, NULL);
   window_raw_click_subscribe(BUTTON_ID_DOWN,   btn_down, NULL, NULL);
@@ -160,6 +157,17 @@ static void click_cfg(void *ctx) {
 
 // Flick / wrist-raise via accelerometer.
 static void accel_tap(AccelAxisType axis, int32_t dir) {
+  enter_attention();
+}
+
+// Watchface regains focus after a system overlay (notification, quick launch,
+// timeline peek…) is dismissed — system has already done its thing.
+static void focus_handler(bool in_focus) {
+  if (in_focus) enter_attention();
+}
+
+// Bluetooth connect / disconnect — system shows a status banner and vibrates.
+static void connection_handler(bool connected) {
   enter_attention();
 }
 
@@ -232,11 +240,19 @@ static void window_load(Window *win) {
   // ── Services ────────────────────────────────────────────────────────────────
   window_set_click_config_provider(win, click_cfg);
   accel_tap_service_subscribe(accel_tap);
+  app_focus_service_subscribe_handlers((AppFocusHandlers){
+    .will_focus = focus_handler,
+  });
+  connection_service_subscribe_events((ConnectionHandlers){
+    .pebble_app_connection_handler = connection_handler,
+  });
 }
 
 static void window_unload(Window *win) {
   cancel_everything();
   accel_tap_service_unsubscribe();
+  app_focus_service_unsubscribe();
+  connection_service_unsubscribe();
 
   text_layer_destroy(s_what);
   text_layer_destroy(s_time_q);

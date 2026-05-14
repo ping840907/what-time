@@ -331,7 +331,7 @@ static void window_load(Window *win) {
   // On round displays (chalk / gabbro) we shift inward a little.
 #if defined(PBL_ROUND)
   const int fine_margin      = b.size.w / 8;
-  const int fine_right_nudge = 3;
+  const int fine_right_nudge = 7;
 #else
   const int fine_margin      = 6;
   const int fine_right_nudge = 0;

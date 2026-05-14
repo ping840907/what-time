@@ -246,6 +246,8 @@ static void window_load(Window *win) {
   connection_service_subscribe((ConnectionHandlers){
     .pebble_app_connection_handler = connection_handler,
   });
+
+  enter_attention();
 }
 
 static void window_unload(Window *win) {

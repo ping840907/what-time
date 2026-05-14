@@ -115,6 +115,12 @@ static const char * const PHRASES[] = {
   "I checked. It's %s.",
   "Not that it matters. %s.",
   "Was that necessary? %s.",
+  "Against my better judgement: %s.",
+  "Regrettably, it's %s.",
+  "I suppose it's %s.",
+  "Barely worth mentioning: %s.",
+  "Just this once: %s.",
+  "Oh, apparently it's %s.",
 };
 
 static void apply_time(struct tm *lt) {

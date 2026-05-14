@@ -152,4 +152,4 @@ The irony of using an AI that genuinely enjoys being helpful to build a watchfac
 
 ---
 
-*Built with the [Rebble](https://rebble.io) community SDK. Pebble lives on.*
+*Compiled on [Rebble CloudPebble](https://cloudpebble.net) using the Rebble-maintained SDK — a community-driven continuation of the original Pebble SDK, extended to support Emery, Flint, and Gabbro. Pebble lives on.*

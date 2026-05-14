@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "keywords": ["pebble-app"],
   "dependencies": {
-    "pebble-clay": "rebble/clay"
+    "pebble-clay": "rebble/clay#v1.0.8"
   }
 }

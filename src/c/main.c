@@ -330,15 +330,17 @@ static void window_load(Window *win) {
   // Small font, right-aligned, pinned to the bottom-right corner.
   // On round displays (chalk / gabbro) we shift inward a little.
 #if defined(PBL_ROUND)
-  const int fine_margin = b.size.w / 8;
+  const int fine_margin      = b.size.w / 8;
+  const int fine_right_nudge = 3;
 #else
-  const int fine_margin = 6;
+  const int fine_margin      = 6;
+  const int fine_right_nudge = 0;
 #endif
   const int fine_h = small_screen ? 18 : 22;
   s_fine = make_layer(root,
                       GRect(fine_margin,
                             b.size.h - fine_h - fine_margin,
-                            b.size.w - fine_margin * 2,
+                            b.size.w - fine_margin * 2 - fine_right_nudge,
                             fine_h),
                       small, GTextAlignmentRight, NULL);
   layer_set_hidden(text_layer_get_layer(s_fine), true);

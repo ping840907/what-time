@@ -143,17 +143,19 @@ static void enter_attention(void) {
 
 // ── Input handlers ────────────────────────────────────────────────────────────
 
-static void btn_handler(ClickRecognizerRef r, void *ctx) {
+static void btn_down(ClickRecognizerRef r, void *ctx) {
   enter_attention();
 }
 
-// On emery / gabbro the click config provider also receives touch taps
-// delivered through the same ClickRecognizer infrastructure.
+// raw_click fires on button-down, bypassing the single-click recogniser's
+// down→up wait.  This is more reliable in watchface contexts where the
+// click config provider may not be invoked with the same timing as in apps.
+// On emery / gabbro, touch taps are also routed through this provider.
 static void click_cfg(void *ctx) {
-  window_single_click_subscribe(BUTTON_ID_UP,     btn_handler);
-  window_single_click_subscribe(BUTTON_ID_DOWN,   btn_handler);
-  window_single_click_subscribe(BUTTON_ID_SELECT, btn_handler);
-  // BUTTON_ID_BACK exits to system on watchfaces; omit to preserve that.
+  window_raw_click_subscribe(BUTTON_ID_UP,     btn_down, NULL, NULL);
+  window_raw_click_subscribe(BUTTON_ID_DOWN,   btn_down, NULL, NULL);
+  window_raw_click_subscribe(BUTTON_ID_SELECT, btn_down, NULL, NULL);
+  window_raw_click_subscribe(BUTTON_ID_BACK,   btn_down, NULL, NULL);
 }
 
 // Flick / wrist-raise via accelerometer.

@@ -12,17 +12,25 @@
         "displayName": "What Time?",
         "enableMultiJS": true,
         "messageKeys": {
-            "show_phrase": 0,
-            "reveal_delay": 1,
-            "use_typewriter": 2,
-            "show_time": 3,
             "bg_color": 4,
+            "invert": 6,
+            "reveal_delay": 1,
+            "show_phrase": 0,
+            "show_time": 3,
             "text_color": 5,
-            "invert": 6
+            "use_typewriter": 2
         },
         "projectType": "native",
         "resources": {
-            "media": []
+            "media": [
+                {
+                    "file": "images/icon.png",
+                    "menuIcon": true,
+                    "name": "IMAGE_LAUNCHER_ICON",
+                    "targetPlatforms": null,
+                    "type": "png-trans"
+                }
+            ]
         },
         "sdkVersion": "3",
         "targetPlatforms": [
@@ -34,7 +42,7 @@
             "gabbro",
             "flint"
         ],
-        "uuid": "a4e8c3f1-5b2d-4a7e-9c0f-3e6b8d1a5c2e",
+        "uuid": "152e8ddd-e4e7-4a2b-ac0f-7804beed3b3f",
         "watchapp": {
             "watchface": true
         }

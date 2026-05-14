@@ -28,7 +28,7 @@
                     "menuIcon": true,
                     "name": "IMAGE_LAUNCHER_ICON",
                     "targetPlatforms": null,
-                    "type": "png-trans"
+                    "type": "bitmap"
                 }
             ]
         },

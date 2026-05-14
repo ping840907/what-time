@@ -13,7 +13,8 @@
         "enableMultiJS": true,
         "messageKeys": {
             "reveal_delay": 1,
-            "show_phrase": 0
+            "show_phrase": 0,
+            "use_typewriter": 2
         },
         "projectType": "native",
         "resources": {

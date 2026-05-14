@@ -49,8 +49,8 @@ static GRect s_quest_standby_frame;  // "?" next to "Time"
 static GRect s_quest_offscreen;      // "?" off the right edge
 
 // Typewriter buffers.
-static char     s_tbuf[40];
-static char     s_dbuf[40];
+static char     s_tbuf[64];
+static char     s_dbuf[64];
 static int      s_type_pos;
 static AppTimer *s_type_timer;
 

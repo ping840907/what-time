@@ -37,7 +37,7 @@ Or, if it's having a particularly bad day:
 
 > *Do I have to? 14:23.*
 
-Eight seconds later, it goes back to ignoring you.
+About eight and a half seconds later, it goes back to ignoring you.
 
 ---
 

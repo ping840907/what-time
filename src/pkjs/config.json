@@ -57,7 +57,8 @@
     "messageKey": "invert",
     "label": "Invert Colours",
     "description": "White background, black text",
-    "defaultValue": false
+    "defaultValue": false,
+    "capabilities": ["BW"]
   },
   {
     "type": "submit",

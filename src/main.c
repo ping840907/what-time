@@ -33,6 +33,9 @@ static GRect s_time_q_frame;   // standby frame of s_time_q — animation origin
 static GRect s_time_top_frame; // where animated "Time" ends up (top of attention)
 
 static char s_tbuf[40];
+static char s_dbuf[40];  // typewriter display buffer (grows word by word)
+static int  s_type_pos;  // reveal progress in s_tbuf
+static AppTimer *s_type_timer;
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 
@@ -78,6 +81,44 @@ static void refresh_fine_text(void) {
   apply_time(localtime(&now));
 }
 
+// ── Typewriter ────────────────────────────────────────────────────────────────
+
+#define TYPE_WORD_MS  150   // delay between words
+#define TYPE_PUNCT_MS 150   // extra pause after punctuation-ending words
+
+static void type_next(void *unused) {
+  s_type_timer = NULL;
+
+  // Skip inter-word spaces.
+  while (s_tbuf[s_type_pos] == ' ') s_type_pos++;
+  if (s_tbuf[s_type_pos] == '\0') return;
+
+  // Advance to end of this word.
+  while (s_tbuf[s_type_pos] != '\0' && s_tbuf[s_type_pos] != ' ') s_type_pos++;
+
+  // Copy everything revealed so far into the display buffer.
+  memcpy(s_dbuf, s_tbuf, s_type_pos);
+  s_dbuf[s_type_pos] = '\0';
+  text_layer_set_text(s_fine, s_dbuf);
+
+  if (s_tbuf[s_type_pos] == '\0') return;  // last word — done
+
+  char last = s_tbuf[s_type_pos - 1];
+  bool after_punct = (last == '.' || last == ',' || last == '!' ||
+                      last == '?' || last == ';');
+  uint32_t delay = TYPE_WORD_MS + (after_punct ? TYPE_PUNCT_MS : 0U);
+  s_type_timer = app_timer_register(delay, type_next, NULL);
+}
+
+static void start_typewriter(void) {
+  if (s_type_timer) { app_timer_cancel(s_type_timer); s_type_timer = NULL; }
+  s_dbuf[0]  = '\0';
+  s_type_pos = 0;
+  text_layer_set_text(s_fine, s_dbuf);
+  layer_set_hidden(text_layer_get_layer(s_fine), false);
+  s_type_timer = app_timer_register(TYPE_WORD_MS, type_next, NULL);
+}
+
 // ── Timer callbacks ───────────────────────────────────────────────────────────
 
 static void go_standby(void *unused) {
@@ -99,7 +140,7 @@ static void show_fine(void *unused) {
   s_state        = TIMED;
   // Capture time at the exact moment of display, not at the earlier trigger.
   refresh_fine_text();
-  layer_set_hidden(text_layer_get_layer(s_fine), false);
+  start_typewriter();
   // Return to standby after another 8.5 s (total ~10 s since attention).
   s_sleep_timer = app_timer_register(8500, go_standby, NULL);
 }
@@ -127,6 +168,7 @@ static void anim_stopped(Animation *anim, bool finished, void *ctx) {
 static void cancel_everything(void) {
   if (s_reveal_timer) { app_timer_cancel(s_reveal_timer); s_reveal_timer = NULL; }
   if (s_sleep_timer)  { app_timer_cancel(s_sleep_timer);  s_sleep_timer  = NULL; }
+  if (s_type_timer)   { app_timer_cancel(s_type_timer);   s_type_timer   = NULL; }
 
   if (s_prop_anim) {
     // Nullify first so the stopped handler knows this is a cancelled slide.

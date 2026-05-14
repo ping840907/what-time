@@ -109,6 +109,12 @@ static const char * const PHRASES[] = {
   "Oh, for— %s.",
   "Do I have to? %s.",
   "Alright, alright. %s.",
+  "Okay, you win. It's %s.",
+  "Since you insist... %s.",
+  "It's %s. Now shoo.",
+  "I checked. It's %s.",
+  "Not that it matters. %s.",
+  "Was that necessary? %s.",
 };
 
 static void apply_time(struct tm *lt) {

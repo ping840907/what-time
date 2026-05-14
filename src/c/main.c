@@ -198,13 +198,13 @@ static void phase2_stopped(Animation *anim, bool finished, void *ctx) {
     layer_set_hidden(text_layer_get_layer(s_quest),  true);
     layer_set_hidden(text_layer_get_layer(s_matter), false);
     s_state = ATTENTION;
+    uint32_t delay_ms = (uint32_t)s_reveal_delay * 1000;
+    if (delay_ms == 0) delay_ms = 1;
     if (s_show_time) {
-      s_reveal_timer = app_timer_register((uint32_t)s_reveal_delay * 1000,
-                                          show_fine, NULL);
+      s_reveal_timer = app_timer_register(delay_ms, show_fine, NULL);
     } else {
       // Skip time display; use sleep_timer slot to return to standby.
-      s_sleep_timer = app_timer_register((uint32_t)s_reveal_delay * 1000,
-                                         go_standby, NULL);
+      s_sleep_timer = app_timer_register(delay_ms, go_standby, NULL);
     }
   }
 }
@@ -418,7 +418,7 @@ static void inbox_handler(DictionaryIterator *iter, void *ctx) {
   t = dict_find(iter, KEY_REVEAL_DELAY);
   if (t) {
     s_reveal_delay = (int)t->value->int32;
-    if (s_reveal_delay < 1)  s_reveal_delay = 1;
+    if (s_reveal_delay < 0)  s_reveal_delay = 0;
     if (s_reveal_delay > 10) s_reveal_delay = 10;
     persist_write_int(KEY_REVEAL_DELAY, s_reveal_delay);
   }

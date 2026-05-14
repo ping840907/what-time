@@ -22,11 +22,11 @@ module.exports = function(minified) {
 
   function isColorWatch() {
     try {
-      var info = Pebble.getActiveWatchInfo();
+      var info = clayConfig.meta.activeWatchInfo;
       return info && info.capabilities &&
              info.capabilities.indexOf('COLOR') !== -1;
     } catch (e) {
-      return false;  // assume B&W if unknown
+      return false;
     }
   }
 

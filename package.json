@@ -1,0 +1,23 @@
+{
+  "name": "what-time",
+  "version": "1.0.0",
+  "description": "A reluctant time-telling watchface",
+  "author": "Custom",
+  "pebble": {
+    "uuid": "a4e8c3f1-5b2d-4a7e-9c0f-3e6b8d1a5c2e",
+    "shortName": "What Time",
+    "longName": "What Time?",
+    "companyName": "Custom",
+    "versionLabel": "1.0",
+    "sdkVersion": "3",
+    "enableMultiJS": false,
+    "targetPlatforms": ["aplite", "basalt", "chalk", "diorite", "emery", "gabbro"],
+    "watchapp": {
+      "watchface": true
+    },
+    "appKeys": {},
+    "resources": {
+      "media": []
+    }
+  }
+}

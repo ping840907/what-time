@@ -18,18 +18,6 @@ module.exports = function(minified) {
     });
   }
 
-  // ── Platform detection: hide invert on colour watches ─────────────────────
-
-  function isColorWatch() {
-    try {
-      var info = clayConfig.meta.activeWatchInfo;
-      return info && info.capabilities &&
-             info.capabilities.indexOf('COLOR') !== -1;
-    } catch (e) {
-      return false;
-    }
-  }
-
   // ── Wire everything up after the config page is built ─────────────────────
 
   clayConfig.on(clayConfig.EVENTS.AFTER_BUILD, function() {

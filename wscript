@@ -36,4 +36,4 @@ def build(ctx):
     ctx.set_env(cached_env)
     ctx.set_group('bundle')
     ctx.pebble_bundle(binaries=binaries,
-                      js=ctx.path.ant_glob('src/js/**/*.js'))
+                      js=ctx.path.ant_glob('src/pkjs/**/*.js'))

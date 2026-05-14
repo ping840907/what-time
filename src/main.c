@@ -26,15 +26,28 @@ static PropertyAnimation *s_prop_anim;
 static GRect s_matter_offscreen;   // "Time" at bottom, rest below screen
 static GRect s_matter_final;       // vertically centred final position
 
-static char s_tbuf[32];
+static char s_tbuf[40];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-// Single point for 24/12-hour system preference.
+// Reluctant phrases — %s is replaced with the formatted time.
+static const char * const PHRASES[] = {
+  "Fine, it's %s.",
+  "Ugh... %s.",
+  "It's %s. Happy now?",
+  "If you must know, %s.",
+  "%s. There, I said it.",
+  "Oh, for— %s.",
+  "Do I have to? %s.",
+  "Alright, alright. %s.",
+};
+
+// Single point for 24/12-hour system preference; picks a random phrase.
 static void apply_time(struct tm *lt) {
-  strftime(s_tbuf, sizeof(s_tbuf),
-           clock_is_24h_style() ? "Fine, it's %H:%M" : "Fine, it's %I:%M",
-           lt);
+  char ts[8];
+  strftime(ts, sizeof(ts), clock_is_24h_style() ? "%H:%M" : "%I:%M", lt);
+  snprintf(s_tbuf, sizeof(s_tbuf),
+           PHRASES[rand() % (int)ARRAY_LENGTH(PHRASES)], ts);
   text_layer_set_text(s_fine, s_tbuf);
 }
 
@@ -61,6 +74,8 @@ static void go_standby(void *unused) {
 static void show_fine(void *unused) {
   s_reveal_timer = NULL;
   s_state        = TIMED;
+  // Capture time at the exact moment of display, not at the earlier trigger.
+  refresh_fine_text();
   layer_set_hidden(text_layer_get_layer(s_fine), false);
   // Return to standby after another 8.5 s (total ~10 s since attention).
   s_sleep_timer = app_timer_register(8500, go_standby, NULL);
@@ -99,7 +114,6 @@ static void cancel_everything(void) {
 
 static void enter_attention(void) {
   cancel_everything();
-  refresh_fine_text();
 
   // Hide standby; hide fine label until the timer fires.
   layer_set_hidden(text_layer_get_layer(s_what),   true);
@@ -145,12 +159,6 @@ static void click_cfg(void *ctx) {
 // Flick / wrist-raise via accelerometer.
 static void accel_tap(AccelAxisType axis, int32_t dir) {
   enter_attention();
-}
-
-// Keep time label live while it is displayed.
-static void tick_cb(struct tm *tm, TimeUnits u) {
-  if (s_state != TIMED) return;
-  apply_time(tm);
 }
 
 // ── Text layer factory ────────────────────────────────────────────────────────
@@ -222,13 +230,11 @@ static void window_load(Window *win) {
   // ── Services ────────────────────────────────────────────────────────────────
   window_set_click_config_provider(win, click_cfg);
   accel_tap_service_subscribe(accel_tap);
-  tick_timer_service_subscribe(MINUTE_UNIT, tick_cb);
 }
 
 static void window_unload(Window *win) {
   cancel_everything();
   accel_tap_service_unsubscribe();
-  tick_timer_service_unsubscribe();
 
   text_layer_destroy(s_what);
   text_layer_destroy(s_time_q);
@@ -239,6 +245,7 @@ static void window_unload(Window *win) {
 // ── Entry point ───────────────────────────────────────────────────────────────
 
 static void init(void) {
+  srand((unsigned)time(NULL));
   s_win = window_create();
   window_set_window_handlers(s_win, (WindowHandlers){
     .load   = window_load,

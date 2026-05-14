@@ -114,11 +114,11 @@ static const char * const PHRASES[] = {
   "It's %s. Now shoo.",
   "I checked. It's %s.",
   "Not that it matters. %s.",
-  "Was that necessary? %s.",
+  "Sigh... %s.",
   "If I must: %s.",
   "Regrettably, it's %s.",
   "I suppose it's %s.",
-  "return \"%s\"; //whatever",
+  "return \"%s\"; // meh",
   "Just this once: %s.",
   "Oh, apparently it's %s.",
 };

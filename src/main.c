@@ -30,13 +30,17 @@ static char s_tbuf[32];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-static void refresh_fine_text(void) {
-  time_t now = time(NULL);
-  struct tm *lt = localtime(&now);
+// Single point for 24/12-hour system preference.
+static void apply_time(struct tm *lt) {
   strftime(s_tbuf, sizeof(s_tbuf),
            clock_is_24h_style() ? "Fine, it's %H:%M" : "Fine, it's %I:%M",
            lt);
   text_layer_set_text(s_fine, s_tbuf);
+}
+
+static void refresh_fine_text(void) {
+  time_t now = time(NULL);
+  apply_time(localtime(&now));
 }
 
 // ── Timer callbacks ───────────────────────────────────────────────────────────
@@ -146,10 +150,7 @@ static void accel_tap(AccelAxisType axis, int32_t dir) {
 // Keep time label live while it is displayed.
 static void tick_cb(struct tm *tm, TimeUnits u) {
   if (s_state != TIMED) return;
-  strftime(s_tbuf, sizeof(s_tbuf),
-           clock_is_24h_style() ? "Fine, it's %H:%M" : "Fine, it's %I:%M",
-           tm);
-  text_layer_set_text(s_fine, s_tbuf);
+  apply_time(tm);
 }
 
 // ── Text layer factory ────────────────────────────────────────────────────────

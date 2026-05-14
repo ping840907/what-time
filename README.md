@@ -37,7 +37,7 @@ Or, if it's having a particularly bad day:
 
 > *Do I have to? 14:23.*
 
-About eight and a half seconds later, it goes back to ignoring you.
+Ten seconds later, it goes back to ignoring you.
 
 ---
 
@@ -103,7 +103,7 @@ The Clay configuration UI is available through the Pebble / Rebble app's watchfa
 
 The Reveal Delay, phrase, and typewriter settings are hidden in the config UI when "Still Show the Time" is off (since they become irrelevant).
 
-> **Timing note:** Reveal Delay is the time spent on the attention block *before* the time appears — not the total display duration. The time is then shown for 8.5 seconds regardless of the delay setting. At maximum delay (10 s), the total cycle is 10 + 8.5 = 18.5 seconds.
+> **Timing note:** Reveal Delay is the time spent on the attention block *before* the time appears — not the total display duration. The time is then shown for 10 seconds regardless of the delay setting. At maximum delay (10 s), the total cycle is 10 + 10 = 20 seconds.
 
 Settings are persisted across restarts.
 

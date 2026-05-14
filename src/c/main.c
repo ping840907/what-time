@@ -175,7 +175,7 @@ static void show_fine(void *unused) {
   } else {
     layer_set_hidden(text_layer_get_layer(s_fine), false);
   }
-  s_sleep_timer = app_timer_register(8500, go_standby, NULL);
+  s_sleep_timer = app_timer_register(10000, go_standby, NULL);
 }
 
 // ── Animation callbacks ───────────────────────────────────────────────────────

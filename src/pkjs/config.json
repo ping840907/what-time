@@ -16,7 +16,7 @@
     "label": "Reveal Delay (seconds)",
     "description": "How long to dwell on 'Time Doesn't Matter.' before showing the time",
     "defaultValue": 2,
-    "min": 1,
+    "min": 0,
     "max": 10,
     "step": 1
   },

@@ -385,13 +385,17 @@ static void click_cfg(void *ctx) {
   window_raw_click_subscribe(BUTTON_ID_BACK,   btn_down, NULL, NULL);
 }
 
-static void accel_tap(AccelAxisType axis, int32_t dir) { enter_attention(); }
-
-static void focus_handler(bool in_focus) {
-  if (in_focus) enter_attention();
+static void accel_tap(AccelAxisType axis, int32_t dir) {
+  if (s_state == STANDBY) enter_attention();
 }
 
-static void connection_handler(bool connected) { enter_attention(); }
+static void focus_handler(bool in_focus) {
+  if (in_focus && s_state == STANDBY) enter_attention();
+}
+
+static void connection_handler(bool connected) {
+  if (s_state == STANDBY) enter_attention();
+}
 
 // ── AppMessage (Clay settings) ────────────────────────────────────────────────
 

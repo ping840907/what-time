@@ -243,7 +243,7 @@ static void window_load(Window *win) {
   app_focus_service_subscribe_handlers((AppFocusHandlers){
     .will_focus = focus_handler,
   });
-  connection_service_subscribe_events((ConnectionHandlers){
+  connection_service_subscribe((ConnectionHandlers){
     .pebble_app_connection_handler = connection_handler,
   });
 }

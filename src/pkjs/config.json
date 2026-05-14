@@ -5,9 +5,26 @@
   },
   {
     "type": "toggle",
+    "messageKey": "show_time",
+    "label": "Still Show the Time",
+    "description": "After the dramatic reveal, actually tell you what time it is",
+    "defaultValue": true
+  },
+  {
+    "type": "slider",
+    "messageKey": "reveal_delay",
+    "label": "Reveal Delay (seconds)",
+    "description": "How long to dwell on 'Time Doesn't Matter.' before showing the time",
+    "defaultValue": 2,
+    "min": 1,
+    "max": 10,
+    "step": 1
+  },
+  {
+    "type": "toggle",
     "messageKey": "show_phrase",
     "label": "Show Reluctant Phrase",
-    "description": "Display a random reluctant phrase alongside the time",
+    "description": "Display a random complaint alongside the time",
     "defaultValue": true
   },
   {
@@ -18,14 +35,29 @@
     "defaultValue": true
   },
   {
-    "type": "slider",
-    "messageKey": "reveal_delay",
-    "label": "Reveal Delay (seconds)",
-    "description": "How long to wait before showing the time after the animation",
-    "defaultValue": 2,
-    "min": 1,
-    "max": 10,
-    "step": 1
+    "type": "heading",
+    "defaultValue": "Appearance"
+  },
+  {
+    "type": "color",
+    "messageKey": "bg_color",
+    "label": "Background Colour",
+    "defaultValue": "000000",
+    "capabilities": ["COLOR"]
+  },
+  {
+    "type": "color",
+    "messageKey": "text_color",
+    "label": "Text Colour",
+    "defaultValue": "FFFFFF",
+    "capabilities": ["COLOR"]
+  },
+  {
+    "type": "toggle",
+    "messageKey": "invert",
+    "label": "Invert Colours",
+    "description": "White background, black text",
+    "defaultValue": false
   },
   {
     "type": "submit",

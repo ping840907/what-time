@@ -5,6 +5,10 @@
 #define KEY_SHOW_PHRASE    0
 #define KEY_REVEAL_DELAY   1
 #define KEY_USE_TYPEWRITER 2
+#define KEY_SHOW_TIME      3
+#define KEY_BG_COLOR       4
+#define KEY_TEXT_COLOR     5
+#define KEY_INVERT         6
 
 // ── Animation timing ──────────────────────────────────────────────────────────
 
@@ -52,9 +56,13 @@ static AppTimer *s_type_timer;
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 
-static bool s_show_phrase    = true;
-static bool s_use_typewriter = true;
-static int  s_reveal_delay   = 2;
+static bool     s_show_phrase    = true;
+static bool     s_use_typewriter = true;
+static int      s_reveal_delay   = 2;
+static bool     s_show_time      = true;
+static uint32_t s_bg_color       = 0x000000;  // black
+static uint32_t s_text_color     = 0xFFFFFF;  // white
+static bool     s_invert         = false;
 
 static void load_settings(void) {
   if (persist_exists(KEY_SHOW_PHRASE))
@@ -63,6 +71,31 @@ static void load_settings(void) {
     s_use_typewriter = persist_read_bool(KEY_USE_TYPEWRITER);
   if (persist_exists(KEY_REVEAL_DELAY))
     s_reveal_delay = persist_read_int(KEY_REVEAL_DELAY);
+  if (persist_exists(KEY_SHOW_TIME))
+    s_show_time = persist_read_bool(KEY_SHOW_TIME);
+  if (persist_exists(KEY_BG_COLOR))
+    s_bg_color = (uint32_t)persist_read_int(KEY_BG_COLOR);
+  if (persist_exists(KEY_TEXT_COLOR))
+    s_text_color = (uint32_t)persist_read_int(KEY_TEXT_COLOR);
+  if (persist_exists(KEY_INVERT))
+    s_invert = persist_read_bool(KEY_INVERT);
+}
+
+static void apply_colors(void) {
+  if (!s_what) return;
+#if defined(PBL_COLOR)
+  GColor bg   = GColorFromHEX(s_bg_color);
+  GColor text = GColorFromHEX(s_text_color);
+#else
+  GColor bg   = s_invert ? GColorWhite : GColorBlack;
+  GColor text = s_invert ? GColorBlack : GColorWhite;
+#endif
+  window_set_background_color(s_win, bg);
+  text_layer_set_text_color(s_what,   text);
+  text_layer_set_text_color(s_time,   text);
+  text_layer_set_text_color(s_quest,  text);
+  text_layer_set_text_color(s_matter, text);
+  text_layer_set_text_color(s_fine,   text);
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -164,9 +197,15 @@ static void phase2_stopped(Animation *anim, bool finished, void *ctx) {
     layer_set_frame(text_layer_get_layer(s_time), s_time_center_frame);
     layer_set_hidden(text_layer_get_layer(s_quest),  true);
     layer_set_hidden(text_layer_get_layer(s_matter), false);
-    s_state        = ATTENTION;
-    s_reveal_timer = app_timer_register((uint32_t)s_reveal_delay * 1000,
-                                        show_fine, NULL);
+    s_state = ATTENTION;
+    if (s_show_time) {
+      s_reveal_timer = app_timer_register((uint32_t)s_reveal_delay * 1000,
+                                          show_fine, NULL);
+    } else {
+      // Skip time display; use sleep_timer slot to return to standby.
+      s_sleep_timer = app_timer_register((uint32_t)s_reveal_delay * 1000,
+                                         go_standby, NULL);
+    }
   }
 }
 
@@ -358,6 +397,7 @@ static void connection_handler(bool connected) { enter_attention(); }
 
 static void inbox_handler(DictionaryIterator *iter, void *ctx) {
   Tuple *t;
+  bool colors_changed = false;
 
   t = dict_find(iter, KEY_SHOW_PHRASE);
   if (t) {
@@ -378,6 +418,35 @@ static void inbox_handler(DictionaryIterator *iter, void *ctx) {
     if (s_reveal_delay > 10) s_reveal_delay = 10;
     persist_write_int(KEY_REVEAL_DELAY, s_reveal_delay);
   }
+
+  t = dict_find(iter, KEY_SHOW_TIME);
+  if (t) {
+    s_show_time = (bool)t->value->int32;
+    persist_write_bool(KEY_SHOW_TIME, s_show_time);
+  }
+
+  t = dict_find(iter, KEY_BG_COLOR);
+  if (t) {
+    s_bg_color = (uint32_t)t->value->int32;
+    persist_write_int(KEY_BG_COLOR, (int32_t)s_bg_color);
+    colors_changed = true;
+  }
+
+  t = dict_find(iter, KEY_TEXT_COLOR);
+  if (t) {
+    s_text_color = (uint32_t)t->value->int32;
+    persist_write_int(KEY_TEXT_COLOR, (int32_t)s_text_color);
+    colors_changed = true;
+  }
+
+  t = dict_find(iter, KEY_INVERT);
+  if (t) {
+    s_invert = (bool)t->value->int32;
+    persist_write_bool(KEY_INVERT, s_invert);
+    colors_changed = true;
+  }
+
+  if (colors_changed) apply_colors();
 }
 
 // ── Text layer factory ────────────────────────────────────────────────────────
@@ -400,8 +469,6 @@ static TextLayer *make_layer(Layer *root, GRect frame, GFont font,
 static void window_load(Window *win) {
   Layer *root = window_get_root_layer(win);
   GRect  b    = layer_get_bounds(root);
-  window_set_background_color(win, GColorBlack);
-
   bool small_screen = b.size.w < 200;
   GFont bold  = fonts_get_system_font(small_screen ? FONT_KEY_BITHAM_30_BLACK
                                                    : FONT_KEY_BITHAM_42_BOLD);
@@ -461,6 +528,8 @@ static void window_load(Window *win) {
   layer_set_hidden(text_layer_get_layer(s_fine), true);
 
   // ── Services ────────────────────────────────────────────────────────────────
+  apply_colors();
+
   window_set_click_config_provider(win, click_cfg);
   accel_tap_service_subscribe(accel_tap);
   app_focus_service_subscribe_handlers((AppFocusHandlers){
@@ -479,11 +548,11 @@ static void window_unload(Window *win) {
   app_focus_service_unsubscribe();
   connection_service_unsubscribe();
 
-  text_layer_destroy(s_what);
-  text_layer_destroy(s_time);
-  text_layer_destroy(s_quest);
-  text_layer_destroy(s_matter);
-  text_layer_destroy(s_fine);
+  text_layer_destroy(s_what);   s_what   = NULL;
+  text_layer_destroy(s_time);   s_time   = NULL;
+  text_layer_destroy(s_quest);  s_quest  = NULL;
+  text_layer_destroy(s_matter); s_matter = NULL;
+  text_layer_destroy(s_fine);   s_fine   = NULL;
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────
@@ -492,7 +561,7 @@ static void init(void) {
   srand((unsigned)time(NULL));
   load_settings();
   app_message_register_inbox_received(inbox_handler);
-  app_message_open(64, 8);
+  app_message_open(128, 8);
   s_win = window_create();
   window_set_window_handlers(s_win, (WindowHandlers){
     .load   = window_load,

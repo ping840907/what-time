@@ -46,7 +46,8 @@ Eight seconds later, it goes back to ignoring you.
 - **Reluctant time display** — eight random phrases, randomly selected each reveal
 - **Smooth animations** — "?" slides off, "Time" glides to centre, then up into the attention block; the whole sequence reverses when returning to standby
 - **Typewriter effect** — the phrase appears word by word, with natural pauses after punctuation
-- **Fully configurable via Clay** — toggle the phrase, toggle the typewriter effect, set the reveal delay (1–10 s)
+- **Fully configurable via Clay** — toggle time display, phrase, typewriter effect; set reveal delay; pick colours
+- **Custom colours** — background and text colour pickers on colour platforms; invert toggle on B&W
 - **Responsive layout** — `BITHAM_42_BOLD` on Emery's 200 px display; `BITHAM_30_BLACK` everywhere else
 - **System-aware** — triggers on button press, wrist flick, screen tap (Emery/Gabbro), app focus return, and Bluetooth events
 - **24 / 12-hour** — respects the system clock format
@@ -69,7 +70,9 @@ Eight seconds later, it goes back to ignoring you.
 
 ## Building
 
-This project uses the Pebble SDK with Waf and the Rebble-maintained Clay framework.
+This project is compiled on [Rebble's CloudPebble](https://cloudpebble.net) — the browser-based IDE that the Rebble community resurrected after Pebble's shutdown. The SDK in use is Rebble's maintained fork, which extends the original Pebble SDK with support for later hardware (Emery, Flint, Gabbro) that Pebble shipped shortly before closing.
+
+If you prefer a local build, you'll need the Rebble SDK toolchain and the Clay dependency:
 
 ```bash
 # Install Clay (one-time)
@@ -82,17 +85,25 @@ pebble build
 pebble install --emulator basalt
 ```
 
-The Clay configuration UI is available through the Pebble app's watchface settings page once the watchface is installed.
+The Clay configuration UI is available through the Pebble / Rebble app's watchface settings page once the watchface is installed.
 
 ---
 
 ## Configuration
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| Show Reluctant Phrase | On | Whether to show a random complaint or just the bare time |
-| Typewriter Effect | On | Reveal the phrase word by word, or all at once |
-| Reveal Delay | 2 s | How long to display the attention block before caving |
+| Setting | Default | Platforms | Description |
+|---------|---------|-----------|-------------|
+| Still Show the Time | On | All | Whether to reveal the time at all, or just let "Time Doesn't Matter." speak for itself |
+| Reveal Delay | 2 s | All | How long to display the attention block before caving (1–10 s) |
+| Show Reluctant Phrase | On | All | Random complaint alongside the time, or just the bare digits |
+| Typewriter Effect | On | All | Reveal the phrase word by word, or all at once |
+| Background Colour | Black | Colour only | Window background colour |
+| Text Colour | White | Colour only | Text colour |
+| Invert Colours | Off | B&W only | Swap to white background, black text |
+
+The Reveal Delay, phrase, and typewriter settings are hidden in the config UI when "Still Show the Time" is off (since they become irrelevant).
+
+> **Timing note:** Reveal Delay is the time spent on the attention block *before* the time appears — not the total display duration. The time is then shown for 8.5 seconds regardless of the delay setting. At maximum delay (10 s), the total cycle is 10 + 8.5 = 18.5 seconds.
 
 Settings are persisted across restarts.
 
@@ -114,7 +125,9 @@ For the curious:
      ▼
 [Attention]  "Time / Doesn't / Matter."  (reveal_delay seconds)
      │
-     ▼
+     ├─ show_time OFF ──► go_standby immediately (skip to Return Phase A)
+     │
+     ▼  show_time ON
 [Timed]  Phrase types itself out, word by word
      │  8.5 seconds
      ▼

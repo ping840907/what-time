@@ -12,9 +12,13 @@
         "displayName": "What Time?",
         "enableMultiJS": true,
         "messageKeys": {
-            "reveal_delay": 1,
             "show_phrase": 0,
-            "use_typewriter": 2
+            "reveal_delay": 1,
+            "use_typewriter": 2,
+            "show_time": 3,
+            "bg_color": 4,
+            "text_color": 5,
+            "invert": 6
         },
         "projectType": "native",
         "resources": {

@@ -118,7 +118,7 @@ static const char * const PHRASES[] = {
   "If I must: %s.",
   "Regrettably, it's %s.",
   "I suppose it's %s.",
-  "Barely worth mentioning: %s.",
+  "return \"%s\"; // whatever",
   "Just this once: %s.",
   "Oh, apparently it's %s.",
 };

@@ -123,12 +123,28 @@ static const char * const PHRASES[] = {
   "Oh, apparently it's %s.",
 };
 
+static int s_phrase_bag[ARRAY_LENGTH(PHRASES)];
+static int s_phrase_bag_pos = 0;
+
+static void shuffle_bag(void) {
+  int n = (int)ARRAY_LENGTH(PHRASES);
+  for (int i = 0; i < n; i++) s_phrase_bag[i] = i;
+  for (int i = n - 1; i > 0; i--) {
+    int j = rand() % (i + 1);
+    int tmp = s_phrase_bag[i];
+    s_phrase_bag[i] = s_phrase_bag[j];
+    s_phrase_bag[j] = tmp;
+  }
+  s_phrase_bag_pos = 0;
+}
+
 static void apply_time(struct tm *lt) {
   char ts[8];
   strftime(ts, sizeof(ts), clock_is_24h_style() ? "%H:%M" : "%I:%M", lt);
   if (s_show_phrase) {
+    if (s_phrase_bag_pos >= (int)ARRAY_LENGTH(PHRASES)) shuffle_bag();
     snprintf(s_tbuf, sizeof(s_tbuf),
-             PHRASES[rand() % (int)ARRAY_LENGTH(PHRASES)], ts);
+             PHRASES[s_phrase_bag[s_phrase_bag_pos++]], ts);
   } else {
     snprintf(s_tbuf, sizeof(s_tbuf), "%s", ts);
   }
@@ -575,6 +591,7 @@ static void window_unload(Window *win) {
 
 static void init(void) {
   srand((unsigned)time(NULL));
+  shuffle_bag();
   load_settings();
   app_message_register_inbox_received(inbox_handler);
   app_message_open(128, 8);

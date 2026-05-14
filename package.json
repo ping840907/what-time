@@ -1,8 +1,38 @@
 {
-  "name": "what-time",
-  "version": "1.0.0",
-  "keywords": ["pebble-app"],
-  "dependencies": {
-    "pebble-clay": "rebble/clay#v1.0.8"
-  }
+    "author": "Custom",
+    "dependencies": {
+        "@rebble/clay": "^1.0.8"
+    },
+    "keywords": [],
+    "name": "what-time",
+    "pebble": {
+        "capabilities": [
+            "configurable"
+        ],
+        "displayName": "What Time?",
+        "enableMultiJS": true,
+        "messageKeys": {
+            "reveal_delay": 1,
+            "show_phrase": 0
+        },
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk",
+            "diorite",
+            "emery",
+            "gabbro",
+            "flint"
+        ],
+        "uuid": "a4e8c3f1-5b2d-4a7e-9c0f-3e6b8d1a5c2e",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.0.0"
 }

@@ -43,7 +43,7 @@ Ten seconds later, it goes back to ignoring you.
 
 ## Features
 
-- **Reluctant time display** — eight random phrases, randomly selected each reveal
+- **Reluctant time display** — twenty random phrases, randomly selected each reveal
 - **Smooth animations** — "?" slides off, "Time" glides to centre, then up into the attention block; the whole sequence reverses when returning to standby
 - **Typewriter effect** — the phrase appears word by word, with natural pauses after punctuation
 - **Fully configurable via Clay** — toggle time display, phrase, typewriter effect; set reveal delay; pick colours

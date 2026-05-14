@@ -23,8 +23,9 @@ static AppTimer         *s_sleep_timer;
 static PropertyAnimation *s_prop_anim;
 
 // Pre-computed frames for the slide animation (set in window_load).
-static GRect s_matter_offscreen;   // "Time" at bottom, rest below screen
-static GRect s_matter_final;       // vertically centred final position
+static GRect s_matter_final;    // full attention block, vertically centred
+static GRect s_time_q_frame;   // standby frame of s_time_q — animation origin
+static GRect s_time_top_frame; // where animated "Time" ends up (top of attention)
 
 static char s_tbuf[40];
 
@@ -62,8 +63,9 @@ static void go_standby(void *unused) {
   s_sleep_timer = NULL;
   s_state       = STANDBY;
 
-  // Reset matter layer to final frame so next slide starts fresh.
-  layer_set_frame(text_layer_get_layer(s_matter), s_matter_final);
+  // Restore s_time_q to its original standby frame and text.
+  layer_set_frame(text_layer_get_layer(s_time_q), s_time_q_frame);
+  text_layer_set_text(s_time_q, "Time?");
 
   layer_set_hidden(text_layer_get_layer(s_what),   false);
   layer_set_hidden(text_layer_get_layer(s_time_q), false);
@@ -87,10 +89,14 @@ static void anim_stopped(Animation *anim, bool finished, void *ctx) {
   PropertyAnimation *pa = (PropertyAnimation *)ctx;
   property_animation_destroy(pa);
 
-  // If this is still the current animation, advance state.
   if (pa == s_prop_anim) {
     s_prop_anim = NULL;
     if (finished) {
+      // "Time" has arrived at the top — seamlessly swap to the full block.
+      layer_set_hidden(text_layer_get_layer(s_time_q), true);
+      layer_set_frame(text_layer_get_layer(s_time_q), s_time_q_frame);
+      text_layer_set_text(s_time_q, "Time?");
+      layer_set_hidden(text_layer_get_layer(s_matter), false);
       s_state        = ATTENTION;
       s_reveal_timer = app_timer_register(1500, show_fine, NULL);
     }
@@ -115,27 +121,28 @@ static void cancel_everything(void) {
 static void enter_attention(void) {
   cancel_everything();
 
-  // Hide standby; hide fine label until the timer fires.
+  // "What" and "?" vanish instantly; only bare "Time" stays, horizontally
+  // centred at its current vertical position (centre-alignment handles it).
   layer_set_hidden(text_layer_get_layer(s_what),   true);
-  layer_set_hidden(text_layer_get_layer(s_time_q), true);
+  layer_set_hidden(text_layer_get_layer(s_matter), true);
   layer_set_hidden(text_layer_get_layer(s_fine),   true);
+  text_layer_set_text(s_time_q, "Time");
+  layer_set_hidden(text_layer_get_layer(s_time_q), false);
 
-  // Place attention block with "Time" visible at the screen bottom.
-  layer_set_frame(text_layer_get_layer(s_matter), s_matter_offscreen);
-  layer_set_hidden(text_layer_get_layer(s_matter), false);
-
-  // Slide up to the centred final position.
+  // Slide "Time" from wherever it is now up to the top of the attention block.
+  // If re-triggered mid-animation we continue from the current position.
+  GRect from_frame = layer_get_frame(text_layer_get_layer(s_time_q));
   s_prop_anim = property_animation_create_layer_frame(
-      text_layer_get_layer(s_matter),
-      &s_matter_offscreen,
-      &s_matter_final);
+      text_layer_get_layer(s_time_q),
+      &from_frame,
+      &s_time_top_frame);
 
   Animation *anim = property_animation_get_animation(s_prop_anim);
-  animation_set_duration(anim, 480);
+  animation_set_duration(anim, 400);
   animation_set_curve(anim, AnimationCurveEaseOut);
   animation_set_handlers(anim,
       (AnimationHandlers){ .stopped = anim_stopped },
-      s_prop_anim);   // pass pointer as context for destruction
+      s_prop_anim);
 
   s_state = SLIDING;
   animation_schedule(anim);
@@ -202,19 +209,18 @@ static void window_load(Window *win) {
   const int line_h = 48;
   const int cy     = b.size.h / 2;
 
-  s_what   = make_layer(root, GRect(0, cy - line_h, b.size.w, line_h),
-                        bold, GTextAlignmentCenter, "What");
-  s_time_q = make_layer(root, GRect(0, cy,          b.size.w, line_h),
-                        bold, GTextAlignmentCenter, "Time?");
+  s_what       = make_layer(root, GRect(0, cy - line_h, b.size.w, line_h),
+                            bold, GTextAlignmentCenter, "What");
+  s_time_q_frame = GRect(0, cy, b.size.w, line_h);
+  s_time_q     = make_layer(root, s_time_q_frame,
+                            bold, GTextAlignmentCenter, "Time?");
 
   // ── Attention layout ────────────────────────────────────────────────────────
   // Three lines: ~3 × 48 px = 144 px total, with a small buffer.
   const int attn_h = line_h * 3 + 12;
-  s_matter_final = GRect(0, (b.size.h - attn_h) / 2, b.size.w, attn_h);
-
-  // Starting position: first line ("Time") sits at the very bottom of screen;
-  // the remaining two lines extend below (clipped by the display bounds).
-  s_matter_offscreen = GRect(0, b.size.h - line_h, b.size.w, attn_h);
+  const int attn_y = (b.size.h - attn_h) / 2;
+  s_matter_final   = GRect(0, attn_y, b.size.w, attn_h);
+  s_time_top_frame = GRect(0, attn_y, b.size.w, line_h); // where "Time" lands
 
   s_matter = make_layer(root, s_matter_final, bold,
                         GTextAlignmentCenter, "Time\nDoesn't\nMatter.");

@@ -36,6 +36,7 @@ static TextLayer *s_fine;
 // Timers.
 static AppTimer *s_reveal_timer;
 static AppTimer *s_sleep_timer;
+static AppTimer *s_load_timer;
 
 // One PropertyAnimation per moving layer (at most two run concurrently).
 static PropertyAnimation *s_pa_time;
@@ -193,7 +194,7 @@ static void start_phase2(void);
 static void start_return_phaseB(void);
 static void enter_attention(void);
 
-static void on_load_delay(void *unused) { enter_attention(); }
+static void on_load_delay(void *unused) { s_load_timer = NULL; enter_attention(); }
 
 // ── Timer callbacks ───────────────────────────────────────────────────────────
 
@@ -353,6 +354,7 @@ static void go_standby(void *unused) {
 // ── Cancel ────────────────────────────────────────────────────────────────────
 
 static void cancel_everything(void) {
+  if (s_load_timer)   { app_timer_cancel(s_load_timer);   s_load_timer   = NULL; }
   if (s_reveal_timer) { app_timer_cancel(s_reveal_timer); s_reveal_timer = NULL; }
   if (s_sleep_timer)  { app_timer_cancel(s_sleep_timer);  s_sleep_timer  = NULL; }
   if (s_type_timer)   { app_timer_cancel(s_type_timer);   s_type_timer   = NULL; }
@@ -564,7 +566,7 @@ static void window_load(Window *win) {
     .pebble_app_connection_handler = connection_handler,
   });
 
-  app_timer_register(200, on_load_delay, NULL);
+  s_load_timer = app_timer_register(200, on_load_delay, NULL);
 }
 
 static void window_unload(Window *win) {

@@ -191,6 +191,9 @@ static void start_typewriter(void) {
 static void go_standby(void *unused);
 static void start_phase2(void);
 static void start_return_phaseB(void);
+static void enter_attention(void);
+
+static void on_load_delay(void *unused) { enter_attention(); }
 
 // ── Timer callbacks ───────────────────────────────────────────────────────────
 
@@ -561,7 +564,7 @@ static void window_load(Window *win) {
     .pebble_app_connection_handler = connection_handler,
   });
 
-  enter_attention();
+  app_timer_register(200, on_load_delay, NULL);
 }
 
 static void window_unload(Window *win) {

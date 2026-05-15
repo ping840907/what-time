@@ -404,15 +404,6 @@ static void enter_attention(void) {
 
 // ── Input + system event handlers ────────────────────────────────────────────
 
-static void btn_down(ClickRecognizerRef r, void *ctx) { enter_attention(); }
-
-static void click_cfg(void *ctx) {
-  window_raw_click_subscribe(BUTTON_ID_UP,     btn_down, NULL, NULL);
-  window_raw_click_subscribe(BUTTON_ID_DOWN,   btn_down, NULL, NULL);
-  window_raw_click_subscribe(BUTTON_ID_SELECT, btn_down, NULL, NULL);
-  window_raw_click_subscribe(BUTTON_ID_BACK,   btn_down, NULL, NULL);
-}
-
 static void accel_tap(AccelAxisType axis, int32_t dir) {
   if (s_state == STANDBY) enter_attention();
 }
@@ -562,7 +553,6 @@ static void window_load(Window *win) {
   // ── Services ────────────────────────────────────────────────────────────────
   apply_colors();
 
-  window_set_click_config_provider(win, click_cfg);
   accel_tap_service_subscribe(accel_tap);
   app_focus_service_subscribe_handlers((AppFocusHandlers){
     .will_focus = focus_handler,

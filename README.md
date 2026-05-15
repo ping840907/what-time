@@ -49,7 +49,7 @@ Ten seconds later, it goes back to ignoring you.
 - **Fully configurable via Clay** — toggle time display, phrase, typewriter effect; set reveal delay; pick colours
 - **Custom colours** — background and text colour pickers on colour platforms; invert toggle on B&W
 - **Responsive layout** — `BITHAM_42_BOLD` on Emery's 200 px display; `BITHAM_30_BLACK` everywhere else
-- **System-aware** — triggers on button press, wrist flick, app focus return, and Bluetooth events (touch-screen tap is reserved for watchapps by the platform and cannot be used in watchfaces)
+- **System-aware** — triggers on wrist flick, button press, screen tap (Emery/Gabbro), app focus return, and Bluetooth events; all backlight-on transitions are observed via `backlight_service` so touch-wake on Emery/Gabbro is captured without using the watchapp-only `touch_service` API
 - **24 / 12-hour** — respects the system clock format
 
 ---

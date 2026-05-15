@@ -1,8 +1,6 @@
 module.exports = function(minified) {
   var clayConfig = this;
 
-  // ── show_time hierarchy: hide sub-items when time display is disabled ──────
-
   function getTimeSubItems() {
     return [
       clayConfig.getItemByMessageKey('reveal_delay'),
@@ -17,8 +15,6 @@ module.exports = function(minified) {
       enabled ? item.show() : item.hide();
     });
   }
-
-  // ── Wire everything up after the config page is built ─────────────────────
 
   clayConfig.on(clayConfig.EVENTS.AFTER_BUILD, function() {
     var showTimeToggle = clayConfig.getItemByMessageKey('show_time');

@@ -36,6 +36,7 @@ static TextLayer *s_fine;
 // Timers.
 static AppTimer *s_reveal_timer;
 static AppTimer *s_sleep_timer;
+static AppTimer *s_load_timer;
 
 // One PropertyAnimation per moving layer (at most two run concurrently).
 static PropertyAnimation *s_pa_time;
@@ -191,6 +192,9 @@ static void start_typewriter(void) {
 static void go_standby(void *unused);
 static void start_phase2(void);
 static void start_return_phaseB(void);
+static void enter_attention(void);
+
+static void on_load_delay(void *unused) { s_load_timer = NULL; enter_attention(); }
 
 // ── Timer callbacks ───────────────────────────────────────────────────────────
 
@@ -350,6 +354,7 @@ static void go_standby(void *unused) {
 // ── Cancel ────────────────────────────────────────────────────────────────────
 
 static void cancel_everything(void) {
+  if (s_load_timer)   { app_timer_cancel(s_load_timer);   s_load_timer   = NULL; }
   if (s_reveal_timer) { app_timer_cancel(s_reveal_timer); s_reveal_timer = NULL; }
   if (s_sleep_timer)  { app_timer_cancel(s_sleep_timer);  s_sleep_timer  = NULL; }
   if (s_type_timer)   { app_timer_cancel(s_type_timer);   s_type_timer   = NULL; }
@@ -403,15 +408,6 @@ static void enter_attention(void) {
 }
 
 // ── Input + system event handlers ────────────────────────────────────────────
-
-static void btn_down(ClickRecognizerRef r, void *ctx) { enter_attention(); }
-
-static void click_cfg(void *ctx) {
-  window_raw_click_subscribe(BUTTON_ID_UP,     btn_down, NULL, NULL);
-  window_raw_click_subscribe(BUTTON_ID_DOWN,   btn_down, NULL, NULL);
-  window_raw_click_subscribe(BUTTON_ID_SELECT, btn_down, NULL, NULL);
-  window_raw_click_subscribe(BUTTON_ID_BACK,   btn_down, NULL, NULL);
-}
 
 static void accel_tap(AccelAxisType axis, int32_t dir) {
   if (s_state == STANDBY) enter_attention();
@@ -562,7 +558,6 @@ static void window_load(Window *win) {
   // ── Services ────────────────────────────────────────────────────────────────
   apply_colors();
 
-  window_set_click_config_provider(win, click_cfg);
   accel_tap_service_subscribe(accel_tap);
   app_focus_service_subscribe_handlers((AppFocusHandlers){
     .will_focus = focus_handler,
@@ -571,7 +566,7 @@ static void window_load(Window *win) {
     .pebble_app_connection_handler = connection_handler,
   });
 
-  enter_attention();
+  s_load_timer = app_timer_register(200, on_load_delay, NULL);
 }
 
 static void window_unload(Window *win) {

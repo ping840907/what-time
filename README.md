@@ -70,9 +70,9 @@ Ten seconds later, it goes back to ignoring you.
 
 ## Building
 
-This project is compiled on [Rebble's CloudPebble](https://cloudpebble.net) — the browser-based IDE that the Rebble community resurrected after Pebble's shutdown. The SDK in use is Rebble's maintained fork, which extends the original Pebble SDK with support for later hardware (Emery, Flint, Gabbro) that Pebble shipped shortly before closing.
+This project is compiled on [Core Devices' CloudPebble](https://cloudpebble.repebble.com) — the rebuilt browser-based IDE maintained by Core Devices as part of the [Repebble](https://repebble.com) initiative. Core Devices picked up where the Rebble community left off: rather than simply keeping the old services alive, they open-sourced PebbleOS, built new Pebble-compatible hardware, and reconstructed CloudPebble from the ground up for modern use. The SDK in use is Core Devices' [PebbleOS SDK](https://developer.repebble.com/sdk/), which builds on Rebble's maintained fork of the original Pebble SDK and adds support for new Core Devices hardware and APIs (RGB backlight, touch input, speaker output).
 
-If you prefer a local build, you'll need the Rebble SDK toolchain and the Clay dependency:
+If you prefer a local build, you'll need the Core Devices PebbleOS SDK toolchain and the Clay dependency:
 
 ```bash
 # Install Clay (one-time)
@@ -85,7 +85,7 @@ pebble build
 pebble install --emulator basalt
 ```
 
-The Clay configuration UI is available through the Pebble / Rebble app's watchface settings page once the watchface is installed.
+The Clay configuration UI is available through the Repebble companion app's watchface settings page once the watchface is installed.
 
 ---
 

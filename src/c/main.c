@@ -1,6 +1,6 @@
 #include <pebble.h>
 
-// ── Settings keys (match package.json messageKeys) ────────────────────────────
+// ── Settings keys ────────────────────────────────────────────────────────────
 
 #define KEY_SHOW_PHRASE    0
 #define KEY_REVEAL_DELAY   1
@@ -12,8 +12,8 @@
 
 // ── Animation timing ──────────────────────────────────────────────────────────
 
-#define PHASE1_MS 200   // "?" exits / "Time" centres (and reverse)
-#define PHASE2_MS 400   // "Time" slides up / down (and reverse)
+#define PHASE1_MS 200
+#define PHASE2_MS 400
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -22,34 +22,25 @@ typedef enum { STANDBY, CENTERING, SLIDING, ATTENTION, TIMED, RETURNING } State;
 static State  s_state = STANDBY;
 static Window *s_win;
 
-// Standby: "What" + "Time" + "?" as three separate layers.
 static TextLayer *s_what;
-static TextLayer *s_time;   // just "Time", left-aligned, manually positioned
-static TextLayer *s_quest;  // just "?",    left-aligned, manually positioned
-
-// Attention block revealed after the slide.
+static TextLayer *s_time;
+static TextLayer *s_quest;
 static TextLayer *s_matter;
-
-// Delayed reveal.
 static TextLayer *s_fine;
 
-// Timers.
 static AppTimer *s_reveal_timer;
 static AppTimer *s_sleep_timer;
 static AppTimer *s_load_timer;
 
-// One PropertyAnimation per moving layer (at most two run concurrently).
 static PropertyAnimation *s_pa_time;
 static PropertyAnimation *s_pa_quest;
 
-// Pre-computed frames (set in window_load).
-static GRect s_time_standby_frame;   // "Time" within "Time?" (standby Y)
-static GRect s_time_center_frame;    // "Time" centred alone  (standby Y)
-static GRect s_time_top_frame;       // "Time" at top of attention block
-static GRect s_quest_standby_frame;  // "?" next to "Time"
-static GRect s_quest_offscreen;      // "?" off the right edge
+static GRect s_time_standby_frame;
+static GRect s_time_center_frame;
+static GRect s_time_top_frame;
+static GRect s_quest_standby_frame;
+static GRect s_quest_offscreen;
 
-// Typewriter buffers.
 static char     s_tbuf[64];
 static char     s_dbuf[64];
 static int      s_type_pos;
@@ -211,13 +202,6 @@ static void show_fine(void *unused) {
 }
 
 // ── Animation callbacks ───────────────────────────────────────────────────────
-//
-// Pattern: each stopped handler receives ctx = the PropertyAnimation* that was
-// created for that slot.  We check `is_current` (global still points to ctx)
-// to distinguish a normal finish from a cancel-and-replace.  Only the current
-// owner clears the global; the old one just destroys itself.
-
-// ---- Phase 2 (forward): "Time" slides up → seamless swap to s_matter ---------
 
 static void phase2_stopped(Animation *anim, bool finished, void *ctx) {
   PropertyAnimation *pa = (PropertyAnimation *)ctx;
@@ -235,7 +219,6 @@ static void phase2_stopped(Animation *anim, bool finished, void *ctx) {
     if (s_show_time) {
       s_reveal_timer = app_timer_register(delay_ms, show_fine, NULL);
     } else {
-      // Skip time display; use sleep_timer slot to return to standby.
       s_sleep_timer = app_timer_register(delay_ms, go_standby, NULL);
     }
   }
@@ -254,8 +237,6 @@ static void start_phase2(void) {
   animation_schedule(a);
 }
 
-// ---- Phase 1 (forward): "?" exits right, "Time" slides to centre -------------
-
 static void phase1_quest_stopped(Animation *anim, bool finished, void *ctx) {
   PropertyAnimation *pa = (PropertyAnimation *)ctx;
   bool is_current = (s_pa_quest == pa);
@@ -271,8 +252,6 @@ static void phase1_time_stopped(Animation *anim, bool finished, void *ctx) {
   property_animation_destroy(pa);
   if (finished && is_current) start_phase2();
 }
-
-// ---- Phase B (reverse): "Time" returns left, "?" slides back in --------------
 
 static void return_phaseB_quest_stopped(Animation *anim, bool finished, void *ctx) {
   PropertyAnimation *pa = (PropertyAnimation *)ctx;
@@ -318,8 +297,6 @@ static void start_return_phaseB(void) {
   animation_schedule(aq);
 }
 
-// ---- Phase A (reverse): "Time" descends from top of attention block ----------
-
 static void return_phaseA_stopped(Animation *anim, bool finished, void *ctx) {
   PropertyAnimation *pa = (PropertyAnimation *)ctx;
   bool is_current = (s_pa_time == pa);
@@ -335,7 +312,6 @@ static void go_standby(void *unused) {
   layer_set_hidden(text_layer_get_layer(s_fine),   true);
   layer_set_hidden(text_layer_get_layer(s_matter), true);
 
-  // Re-appear "Time" at the top of the attention block and slide it down.
   layer_set_frame(text_layer_get_layer(s_time), s_time_top_frame);
   layer_set_hidden(text_layer_get_layer(s_time), false);
   layer_set_frame(text_layer_get_layer(s_quest), s_quest_offscreen);
@@ -414,10 +390,6 @@ static void accel_tap(AccelAxisType axis, int32_t dir) {
 }
 
 static void backlight_handler(bool is_on) {
-  // Fires on any backlight-on transition: button press, wrist flick side-effect,
-  // or touch-screen tap (Emery/Gabbro via gesture → light_enable_interaction).
-  // accel_tap already advances state off STANDBY before this fires for flicks,
-  // so the STANDBY guard prevents double-triggering in that case.
   if (is_on && s_state == STANDBY) enter_attention();
 }
 
@@ -514,7 +486,6 @@ static void window_load(Window *win) {
   const int line_h = small_screen ? 36 : 48;
   const int cy     = b.size.h / 2;
 
-  // ── Measure "Time" and "?" to compute exact standby positions ──────────────
   GRect measure = GRect(0, 0, b.size.w, line_h * 2);
   GSize time_sz  = graphics_text_layout_get_content_size(
       "Time", bold, measure, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
@@ -522,31 +493,27 @@ static void window_load(Window *win) {
       "?", bold, measure, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
 
   int total_w  = time_sz.w + quest_sz.w;
-  int start_x  = (b.size.w - total_w)  / 2;   // left edge of "Time" in "Time?"
-  int center_x = (b.size.w - time_sz.w) / 2;  // left edge of "Time" centred alone
+  int start_x  = (b.size.w - total_w)  / 2;
+  int center_x = (b.size.w - time_sz.w) / 2;
 
   s_time_standby_frame  = GRect(start_x,             cy, time_sz.w,       line_h);
   s_time_center_frame   = GRect(center_x,            cy, time_sz.w,       line_h);
   s_quest_standby_frame = GRect(start_x + time_sz.w, cy, quest_sz.w + 4,  line_h);
   s_quest_offscreen     = GRect(b.size.w + 4,        cy, quest_sz.w + 4,  line_h);
 
-  // ── Attention layout ────────────────────────────────────────────────────────
   const int attn_h = line_h * 3 + 12;
   const int attn_y = (b.size.h - attn_h) / 2;
   s_time_top_frame = GRect(center_x, attn_y, time_sz.w, line_h);
 
-  // ── Standby layers ──────────────────────────────────────────────────────────
   s_what  = make_layer(root, GRect(0, cy - line_h, b.size.w, line_h),
                        bold, GTextAlignmentCenter, "What");
   s_time  = make_layer(root, s_time_standby_frame,  bold, GTextAlignmentLeft, "Time");
   s_quest = make_layer(root, s_quest_standby_frame, bold, GTextAlignmentLeft, "?");
 
-  // ── Attention block (hidden until animation completes) ──────────────────────
   s_matter = make_layer(root, GRect(0, attn_y, b.size.w, attn_h),
                         bold, GTextAlignmentCenter, "Time\nDoesn't\nMatter.");
   layer_set_hidden(text_layer_get_layer(s_matter), true);
 
-  // ── Fine label ──────────────────────────────────────────────────────────────
 #if defined(PBL_ROUND)
   const int fine_margin      = b.size.w / 8;
   const int fine_right_nudge = 7;
@@ -563,7 +530,6 @@ static void window_load(Window *win) {
                       small, GTextAlignmentRight, NULL);
   layer_set_hidden(text_layer_get_layer(s_fine), true);
 
-  // ── Services ────────────────────────────────────────────────────────────────
   apply_colors();
 
   accel_tap_service_subscribe(accel_tap);

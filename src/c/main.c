@@ -389,10 +389,6 @@ static void accel_tap(AccelAxisType axis, int32_t dir) {
   if (s_state == STANDBY) enter_attention();
 }
 
-static void backlight_handler(bool is_on) {
-  if (is_on && s_state == STANDBY) enter_attention();
-}
-
 static void focus_handler(bool in_focus) {
   if (in_focus && s_state == STANDBY) enter_attention();
 }
@@ -533,7 +529,6 @@ static void window_load(Window *win) {
   apply_colors();
 
   accel_tap_service_subscribe(accel_tap);
-  backlight_service_subscribe(backlight_handler);
   app_focus_service_subscribe_handlers((AppFocusHandlers){
     .will_focus = focus_handler,
   });
@@ -547,7 +542,6 @@ static void window_load(Window *win) {
 static void window_unload(Window *win) {
   cancel_everything();
   accel_tap_service_unsubscribe();
-  backlight_service_unsubscribe();
   app_focus_service_unsubscribe();
   connection_service_unsubscribe();
 

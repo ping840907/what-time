@@ -185,6 +185,7 @@ static void start_phase2(void);
 static void start_return_phaseB(void);
 static void enter_attention(void);
 
+// 觸發條件 1: 初始載入觸發
 static void on_load_delay(void *unused) { s_load_timer = NULL; enter_attention(); }
 
 // ── Timer callbacks ───────────────────────────────────────────────────────────
@@ -358,7 +359,6 @@ static void enter_attention(void) {
   layer_set_hidden(text_layer_get_layer(s_time),   false);
   layer_set_hidden(text_layer_get_layer(s_quest),  false);
 
-  // Start from wherever each layer is now (handles re-triggers mid-animation).
   GRect from_t = layer_get_frame(text_layer_get_layer(s_time));
   GRect from_q = layer_get_frame(text_layer_get_layer(s_quest));
 
@@ -385,16 +385,16 @@ static void enter_attention(void) {
 
 // ── Input + system event handlers ────────────────────────────────────────────
 
+// 觸發條件 2: 搖晃觸發
 static void accel_tap(AccelAxisType axis, int32_t dir) {
   if (s_state == STANDBY) enter_attention();
 }
 
-static void focus_handler(bool in_focus) {
-  if (in_focus && s_state == STANDBY) enter_attention();
-}
-
-static void connection_handler(bool connected) {
-  if (s_state == STANDBY) enter_attention();
+// 觸發條件 3: 背光亮起觸發
+static void backlight_handler(bool on) {
+  if (on && s_state == STANDBY) {
+    enter_attention();
+  }
 }
 
 // ── AppMessage (Clay settings) ────────────────────────────────────────────────
@@ -528,22 +528,18 @@ static void window_load(Window *win) {
 
   apply_colors();
 
+  // 註冊晃動與背光事件
   accel_tap_service_subscribe(accel_tap);
-  app_focus_service_subscribe_handlers((AppFocusHandlers){
-    .will_focus = focus_handler,
-  });
-  connection_service_subscribe((ConnectionHandlers){
-    .pebble_app_connection_handler = connection_handler,
-  });
+  backlight_service_subscribe(backlight_handler);
 
+  // 初始載入計時器
   s_load_timer = app_timer_register(200, on_load_delay, NULL);
 }
 
 static void window_unload(Window *win) {
   cancel_everything();
   accel_tap_service_unsubscribe();
-  app_focus_service_unsubscribe();
-  connection_service_unsubscribe();
+  backlight_service_unsubscribe();
 
   text_layer_destroy(s_what);   s_what   = NULL;
   text_layer_destroy(s_time);   s_time   = NULL;
